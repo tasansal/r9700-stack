@@ -84,11 +84,12 @@ mt = list(Q.mtp_weights([("mtp.lm_head.weight_q4", 0),
                          ("mtp.layers.0.mlp.experts.7.up_proj.weight", w),
                          ("mtp.layers.0.mlp.experts.7.up_proj.weight_scale_inv", s),
                          ("mtp.layers.0.self_attn.o_proj.weight_scale_inv", 3),
-                         ("mtp.layers.0.self_attn.attn.k_scale", 4)], True))
+                         ("mtp.layers.0.self_attn.attn.k_scale", 4),
+                         ("mtp.layers.0.mlp.shared_expert.up_proj.weight", torch.zeros(2, dtype=torch.bfloat16))], True))
 mn = {n: t for n, t in mt}
 check("MTP filter: fork head dropped, fp8 expert -> MXFP4, scale renamed",
       set(mn) == {"mtp.layers.0.mlp.experts.7.up_proj.weight_packed", "mtp.layers.0.mlp.experts.7.up_proj.weight_scale",
-                  "mtp.layers.0.self_attn.o_proj.weight_scale"}, list(mn))
+                  "mtp.layers.0.self_attn.o_proj.weight_scale", "mtp.layers.0.mlp.shared_expert.up_proj.weight"}, list(mn))
 p = mn.get("mtp.layers.0.mlp.experts.7.up_proj.weight_packed")
 check("MTP MXFP4 shapes", p is not None and tuple(p.shape) == (640, 128)
       and tuple(mn["mtp.layers.0.mlp.experts.7.up_proj.weight_scale"].shape) == (640, 8))

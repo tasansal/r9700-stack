@@ -91,7 +91,8 @@ def mtp_weights(weights, mtp_mxfp4: bool):
             continue
         if _DROP_ATTN_SCALE.search(name):
             continue
-        if mtp_mxfp4 and _MTP_MLP_FP8.search(name):
+        # a bf16 MTP MLP has no scale to pair with
+        if mtp_mxfp4 and _MTP_MLP_FP8.search(name) and (w.element_size() == 1 or not name.endswith(".weight")):
             base = name.rsplit(".", 1)[0]
             kind = "scale" if name.endswith(("weight_scale_inv", "weight_scale")) else "w"
             pend.setdefault(base, {})[kind] = w
